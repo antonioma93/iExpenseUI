@@ -7,6 +7,35 @@
 
 import SwiftUI
 
+struct StyleOfAmount: ViewModifier {
+    var amount: Int
+    
+    func body(content: Content) -> some View {
+        var font = Font.system(size: 22, weight: .heavy, design: .default)
+        var foregroundColor = Color.black
+        
+        if amount < 10 {
+            foregroundColor = Color.blue
+        } else if amount == 10 || amount < 100 {
+            foregroundColor = Color.purple
+            font = Font.system(size: 25, weight: .medium, design: .monospaced)
+        } else {
+            foregroundColor = Color.red
+            font = Font.system(size: 30, weight: .bold, design: .rounded)
+        }
+        
+        return content
+            .foregroundColor(foregroundColor)
+            .font(font)
+    }
+}
+
+extension View {
+    func setStyleForAmount(_ amount: Int) -> some View {
+    self.modifier(StyleOfAmount(amount: amount))
+    }
+}
+
 class Expenses: ObservableObject {
     @Published var items = [ExpenseItem](){
         didSet {
@@ -31,6 +60,7 @@ class Expenses: ObservableObject {
 
 struct ContentView: View {
     @ObservedObject var expenses = Expenses()
+    @Environment(\.presentationMode) var presentationMode
     @State private var showingAddExpense = false
     
     var body: some View {
@@ -45,6 +75,7 @@ struct ContentView: View {
                         }
                         Spacer()
                         Text("€\(item.amount)")
+                            .setStyleForAmount(item.amount)
                     }
                 }
                 .onDelete(perform: removeItems)
@@ -57,6 +88,7 @@ struct ContentView: View {
                 Image(systemName: "plus")
             }
             )
+            .navigationBarItems(leading: EditButton())
         }
         .sheet(isPresented: $showingAddExpense) {
             //Show AddView here
